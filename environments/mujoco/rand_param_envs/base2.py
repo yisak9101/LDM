@@ -4,7 +4,7 @@ import numpy as np
 
 from environments.mujoco.rand_param_envs.gym.core import Env
 from environments.mujoco.rand_param_envs.gym.envs.mujoco import MujocoEnv
-
+from utils import helpers as utl
 
 class MetaEnv(Env):
     def step(self, *args, **kwargs):
@@ -70,6 +70,8 @@ class RandomEnv(MetaEnv, MujocoEnv):
     def __init__(self, log_scale_limit, file_name, *args, rand_params=RAND_PARAMS, **kwargs):
         self.log_scale_limit = log_scale_limit
         self.rand_params = rand_params
+        print("file_name in base2.py", file_name)
+
         MujocoEnv.__init__(self, file_name, 4)
         assert set(rand_params) <= set(self.RAND_PARAMS_EXTENDED), \
             "rand_params must be a subset of " + str(self.RAND_PARAMS_EXTENDED)
@@ -77,62 +79,39 @@ class RandomEnv(MetaEnv, MujocoEnv):
         self.task_dim = self.rand_param_dim
 
     def sample_tasks(self, n_tasks):
-        """
-        Generates randomized parameter sets for the mujoco env
-
-        Args:
-            n_tasks (int) : number of different meta-tasks needed
-
-        Returns:
-            tasks (list) : an (n_tasks) length list of tasks
-        """
         param_sets = []
-
         for _ in range(n_tasks):
             # body mass -> one multiplier for all body parts
-
-            new_params = {}
-
-            if 'body_mass' in self.rand_params:
-                rand_params = [random.uniform(-self.log_scale_limit, self.log_scale_limit) for _ in
-                               range(np.prod(self.model.body_mass.shape))]
-                body_mass_multiplyers = np.array(1.5) ** np.array(rand_params).reshape(self.model.body_mass.shape)
-                new_params['body_mass'] = self.init_params['body_mass'] * body_mass_multiplyers
-
-            # body_inertia
-            if 'body_inertia' in self.rand_params:
-                rand_params = [random.uniform(-self.log_scale_limit, self.log_scale_limit) for _ in
-                               range(np.prod(self.model.body_inertia.shape))]
-                body_inertia_multiplyers = np.array(1.5) ** np.array(rand_params).reshape(self.model.body_inertia.shape)
-                new_params['body_inertia'] = body_inertia_multiplyers * self.init_params['body_inertia']
-
-            # damping -> different multiplier for different dofs/joints
-            if 'dof_damping' in self.rand_params:
-                rand_params = [random.uniform(-self.log_scale_limit, self.log_scale_limit) for _ in
-                               range(np.prod(self.model.dof_damping.shape))]
-                dof_damping_multipliers = np.array(1.3) ** np.array(rand_params).reshape(self.model.dof_damping.shape)
-                new_params['dof_damping'] = np.multiply(self.init_params['dof_damping'], dof_damping_multipliers)
-
-            # friction at the body components
-            if 'geom_friction' in self.rand_params:
-                rand_params = [random.uniform(-self.log_scale_limit, self.log_scale_limit) for _ in
-                               range(np.prod(self.model.geom_friction.shape))]
-                dof_damping_multipliers = np.array(1.5) ** np.array(rand_params).reshape(self.model.geom_friction.shape)
-                new_params['geom_friction'] = np.multiply(self.init_params['geom_friction'], dof_damping_multipliers)
-
+            prob = random.random()
+            if prob >= 0.5:
+                body_mass_multiplyers_ = random.uniform(0, 0.5)
+            else:
+                body_mass_multiplyers_ = random.uniform(3.0, 3.5)
+            new_params = self.set_mass_param(body_mass_multiplyers_)
             param_sets.append(new_params)
-
         return param_sets
 
+
+    def set_mass_param(self, body_mass_multiplyers_):
+        mass_size_ = np.prod(self.model.body_mass.shape)
+        new_params = {}
+
+        body_mass_multiplyers = np.array([body_mass_multiplyers_ for _ in range(mass_size_)])
+        body_mass_multiplyers = np.array(1.5) ** body_mass_multiplyers
+        body_mass_multiplyers = np.array(body_mass_multiplyers).reshape(self.model.body_mass.shape)
+
+        new_params['body_mass'] = self.init_params['body_mass'] * body_mass_multiplyers
+        return new_params
+
+
     def set_task(self, task):
-        if isinstance(task, np.ndarray):
-            new_task = {}
-            start_idx = 0
-            for k in self.curr_params.keys():
-                end_idx = np.prod(self.curr_params[k].shape)
-                new_task[k] = task[start_idx:start_idx+end_idx].reshape(self.curr_params[k].shape)
-                start_idx += end_idx
-            task = new_task
+
+        # print("task in set_task", task)
+        if type(task) == int:
+            print("if type(task) == int:", task)
+            task_idx = task
+            task = self.set_mass_param(self.eval_task_list[task_idx])
+
         for param, param_val in task.items():
             param_variable = getattr(self.model, param)
             assert param_variable.shape == param_val.shape, 'shapes of new parameter value and old one must match'
@@ -152,15 +131,4 @@ class RandomEnv(MetaEnv, MujocoEnv):
         if 'body_mass' in self.rand_params:
             self.init_params['body_mass'] = self.model.body_mass
 
-        # body_inertia
-        if 'body_inertia' in self.rand_params:
-            self.init_params['body_inertia'] = self.model.body_inertia
-
-        # damping -> different multiplier for different dofs/joints
-        if 'dof_damping' in self.rand_params:
-            self.init_params['dof_damping'] = self.model.dof_damping
-
-        # friction at the body components
-        if 'geom_friction' in self.rand_params:
-            self.init_params['geom_friction'] = self.model.geom_friction
         self.curr_params = self.init_params

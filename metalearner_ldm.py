@@ -16,9 +16,11 @@ from utils import helpers as utl
 from utils.tb_logger import TBLogger
 from vae import VaribadVAE
 
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print('metalearner_ldm loaded')
 
+import wandb
 
 class MetaLearner:
     """
@@ -74,6 +76,16 @@ class MetaLearner:
         self.vae_pol = VaribadVAE(self.args2, self.logger, lambda: self.iter_idx) #policy network
 
         self.initialise_policy()
+
+        wandb.login(key="7316f79887c82500a01a529518f2af73d5520255")
+        env_name = args1.env_name[:-3]
+        wandb.init(
+            entity='mlic_academic',
+            project='김정모_metaRL_baselines',
+            group=env_name,
+            name='ldm-' + env_name + "-seed" + str(self.args2.seed),
+            config=args1
+        )
 
     def initialise_policy(self):
 
@@ -158,6 +170,8 @@ class MetaLearner:
 
         vae_is_pretrained = False
         for self.iter_idx in range(self.args2.num_updates):
+
+            # print("training..")
 
             # First, re-compute the hidden states given the current rollouts (since the VAE might've changed)
             # compute latent embedding (will return prior if current trajectory is empty)
@@ -497,6 +511,46 @@ class MetaLearner:
                 elif self.args2.env_name == 'HalfCheetahVel-v0':
                     print("train task mean", np.mean(ret_list[:2]))
                     print("test task mean", np.mean(ret_list[2:7]))
+
+                
+
+                ########################
+                elif self.args2.env_name == "walker-mass-inter-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:4])
+                    test_avg_return = np.mean(ret_list[4:])
+                elif self.args2.env_name == "hopper-mass-inter-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:4])
+                    test_avg_return = np.mean(ret_list[4:])
+                elif self.args2.env_name == "cheetah-vel-inter-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:4])
+                    test_avg_return = np.mean(ret_list[4:])
+                elif self.args2.env_name == "ant-dir-2개-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:3])
+                    test_avg_return = np.mean(ret_list[3:])
+                elif self.args2.env_name == "ant-dir-4개-v0":
+                    train_avg_return = np.mean(ret_list[:4])
+                    indistribution_avg_return = np.mean(ret_list[4:8])
+                    test_avg_return = np.mean(ret_list[8:])
+                elif self.args2.env_name == "ant-goal-inter-v0":
+                    train_avg_return = np.mean(ret_list[:8])
+                    indistribution_avg_return = np.mean(ret_list[8:16])
+                    test_avg_return = np.mean(ret_list[16:])
+                elif self.args2.env_name == "cheetah-mass-inter-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:4])
+                    test_avg_return = np.mean(ret_list[4:])
+                
+                wandb_log_dict = {
+                    "Eval/train_avg_return": train_avg_return,
+                    "Eval/indistribution_avg_return": indistribution_avg_return,
+                    "Eval/test_avg_return": test_avg_return,
+                }
+                wandb.log(wandb_log_dict, step=self.frames)
+
 
                 print('mixture number:', self.args1.mixture_number)
         # --- evaluate policy ----
