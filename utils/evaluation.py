@@ -163,13 +163,13 @@ def visualise_behaviour(args,
 
     latent_means, latent_logvars, episode_prev_obs, episode_next_obs, episode_actions, episode_rewards, episode_returns = traj
 
-    if latent_means is not None:
-        plot_latents(latent_means, latent_logvars,
-                     image_folder=image_folder,
-                     iter_idx=iter_idx,
-                     task_num = task_num,
-                     trial_num = trial_num,
-                     )
+    # if latent_means is not None:
+        # plot_latents(latent_means, latent_logvars,
+        #              image_folder=image_folder,
+        #              iter_idx=iter_idx,
+        #              task_num = task_num,
+        #              trial_num = trial_num,
+        #              )
 
         # if not (args.disable_stochasticity_in_latent and args.disable_decoder):
         #     plot_vae_loss(args,
@@ -199,7 +199,7 @@ def visualise_behaviour(args,
     #    return torch.stack(episode_returns).sum(dim=0).cpu().numpy()[0][0]
     #else:
     #    return(sum(episode_returns))
-    return torch.stack(episode_returns).sum(dim=0).cpu().numpy()[0][0]
+    return torch.stack(episode_returns).sum(dim=0).cpu().numpy()[0][0], latent_means
 
 
 def get_test_rollout(args, env, policy, encoder=None, reward_decoder=None, image_folder=None, iter_idx=None, task_num=None, encoder_vae=None):

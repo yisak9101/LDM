@@ -2,3 +2,4 @@
 logs
 wandb
 .pycache
+__pycache__

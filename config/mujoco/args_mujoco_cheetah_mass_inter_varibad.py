@@ -144,7 +144,7 @@ def get_args(rest_args):
                         help='save interval, one save per n updates (default: 100)')
     parser.add_argument('--eval_interval', type=int, default=1000,
                         help='eval interval, one eval per n updates (default: None)')
-    parser.add_argument('--vis_interval', type=int, default=1000,
+    parser.add_argument('--vis_interval', type=int, default=50,
                         help='visualisation interval, one eval per n updates (default: None)')
     parser.add_argument('--agent_log_dir', default='/tmp/gym/', help='directory to save agent logs (default: /tmp/gym)')
     parser.add_argument('--results_log_dir', default=None, help='directory to save agent logs (default: ./data)')

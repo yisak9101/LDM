@@ -216,58 +216,58 @@ class HalfCheetahEnv(HalfCheetahEnv_):
         episode_actions = [torch.cat(e) for e in episode_actions]
         episode_rewards = [torch.cat(e) for e in episode_rewards]
 
-        # plot the movement of the half-cheetah
-        plt.figure(figsize=(7, 4 * num_episodes))
-        min_x = min([min(p) for p in pos])
-        max_x = max([max(p) for p in pos])
-        span = max_x - min_x
-        for i in range(num_episodes):
-            plt.subplot(num_episodes, 1, i + 1)
-            # (not plotting the last step because this gives weird artefacts)
-            plt.plot(pos[i][:-1], range(len(pos[i][:-1])), 'k')
-            plt.title('task: {} return: {:04.2f}'.format(task, episode_returns[i].cpu().numpy()[0][0]), fontsize=15)
-            plt.ylabel('steps (ep {})'.format(i), fontsize=15)
-            if i == num_episodes - 1:
-                plt.xlabel('position', fontsize=15)
-            # else:
-            #     plt.xticks([])
-            plt.xlim(min_x - 0.05 * span, max_x + 0.05 * span)
-            plt.plot([0, 0], [200, 200], 'b--', alpha=0.2)
-        plt.tight_layout()
-        if image_folder is not None:
-            if trial_num is None:
-                behaviour_dir = '{}/{}/{:02d}'.format(image_folder, iter_idx, task_num)
-            else:
-                behaviour_dir = '{}/{}/{}/{:02d}'.format(image_folder, iter_idx, trial_num, task_num)
-            plt.savefig(behaviour_dir+'_behaviour.pdf')
-            plt.close()
-
-            for i in range(num_episodes):
-                if encoder_vae is not None:
-                    np.savez(behaviour_dir + '_' + str(i) + '_data.npz',
-                             episode_latent_means_vae=episode_latent_means_vae[i].detach().cpu().numpy(),
-                             episode_latent_logvars_vae=episode_latent_logvars_vae[i].detach().cpu().numpy(),
-                             #episode_prev_obs=episode_prev_obs[i].detach().cpu().numpy(),
-                             #episode_next_obs=episode_next_obs[i].detach().cpu().numpy(),
-                             #episode_actions=episode_actions[i].detach().cpu().numpy(),
-                             episode_rewards=episode_rewards[i].detach().cpu().numpy(),
-                             episode_returns=episode_returns[i].detach().cpu().numpy(),
-                             episode_position= pos[i]
-                             )
-                else:
-                    np.savez(behaviour_dir + '_' + str(i) + '_data.npz',
-                             #episode_latent_means=episode_latent_means[i].detach().cpu().numpy(),
-                             #episode_latent_logvars=episode_latent_logvars[i].detach().cpu().numpy(),
-                             #episode_prev_obs=episode_prev_obs[i].detach().cpu().numpy(),
-                             #episode_next_obs=episode_next_obs[i].detach().cpu().numpy(),
-                             #episode_actions=episode_actions[i].detach().cpu().numpy(),
-                             episode_rewards=episode_rewards[i].detach().cpu().numpy(),
-                             episode_returns=episode_returns[i].detach().cpu().numpy(),
-                             episode_position=pos[i]
-                             )
-
-        else:
-            plt.show()
+        # # plot the movement of the half-cheetah
+        # plt.figure(figsize=(7, 4 * num_episodes))
+        # min_x = min([min(p) for p in pos])
+        # max_x = max([max(p) for p in pos])
+        # span = max_x - min_x
+        # for i in range(num_episodes):
+        #     plt.subplot(num_episodes, 1, i + 1)
+        #     # (not plotting the last step because this gives weird artefacts)
+        #     plt.plot(pos[i][:-1], range(len(pos[i][:-1])), 'k')
+        #     plt.title('task: {} return: {:04.2f}'.format(task, episode_returns[i].cpu().numpy()[0][0]), fontsize=15)
+        #     plt.ylabel('steps (ep {})'.format(i), fontsize=15)
+        #     if i == num_episodes - 1:
+        #         plt.xlabel('position', fontsize=15)
+        #     # else:
+        #     #     plt.xticks([])
+        #     plt.xlim(min_x - 0.05 * span, max_x + 0.05 * span)
+        #     plt.plot([0, 0], [200, 200], 'b--', alpha=0.2)
+        # plt.tight_layout()
+        # if image_folder is not None:
+        #     if trial_num is None:
+        #         behaviour_dir = '{}/{}/{:02d}'.format(image_folder, iter_idx, task_num)
+        #     else:
+        #         behaviour_dir = '{}/{}/{}/{:02d}'.format(image_folder, iter_idx, trial_num, task_num)
+        #     plt.savefig(behaviour_dir+'_behaviour.pdf')
+        #     plt.close()
+        #
+        #     for i in range(num_episodes):
+        #         if encoder_vae is not None:
+        #             np.savez(behaviour_dir + '_' + str(i) + '_data.npz',
+        #                      episode_latent_means_vae=episode_latent_means_vae[i].detach().cpu().numpy(),
+        #                      episode_latent_logvars_vae=episode_latent_logvars_vae[i].detach().cpu().numpy(),
+        #                      #episode_prev_obs=episode_prev_obs[i].detach().cpu().numpy(),
+        #                      #episode_next_obs=episode_next_obs[i].detach().cpu().numpy(),
+        #                      #episode_actions=episode_actions[i].detach().cpu().numpy(),
+        #                      episode_rewards=episode_rewards[i].detach().cpu().numpy(),
+        #                      episode_returns=episode_returns[i].detach().cpu().numpy(),
+        #                      episode_position= pos[i]
+        #                      )
+        #         else:
+        #             np.savez(behaviour_dir + '_' + str(i) + '_data.npz',
+        #                      #episode_latent_means=episode_latent_means[i].detach().cpu().numpy(),
+        #                      #episode_latent_logvars=episode_latent_logvars[i].detach().cpu().numpy(),
+        #                      #episode_prev_obs=episode_prev_obs[i].detach().cpu().numpy(),
+        #                      #episode_next_obs=episode_next_obs[i].detach().cpu().numpy(),
+        #                      #episode_actions=episode_actions[i].detach().cpu().numpy(),
+        #                      episode_rewards=episode_rewards[i].detach().cpu().numpy(),
+        #                      episode_returns=episode_returns[i].detach().cpu().numpy(),
+        #                      episode_position=pos[i]
+        #                      )
+        #
+        # else:
+        #     plt.show()
 
         if not return_pos:
             if encoder_vae is not None:

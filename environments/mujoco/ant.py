@@ -256,77 +256,77 @@ class AntEnv(MujocoEnv):
         episode_actions = [torch.cat(e) for e in episode_actions]
         episode_rewards = [torch.cat(e) for e in episode_rewards]
 
-        # plot the movement of the ant
-        # print(pos)
-        plt.figure(figsize=(4.25, 4 * num_episodes))
-        min_dim = -3.5
-        max_dim = 3.5
-        span = max_dim - min_dim
-
-        for i in range(num_episodes):
-            axes = plt.subplot(num_episodes, 1, i + 1)
-
-            if args.env_name == 'AntDir-v0':
-                plt.title('task: {} degrees, return: {:04.2f}'.format(np.degrees(task), episode_returns[i].cpu().numpy()[0][0]), fontsize=15)
-            if args.env_name == 'AntGoal-v0':
-                plt.plot(task[0], task[1], 'rx')
-                circle1 = plt.Circle((0.0, 0.0), radius=3.0, facecolor='lightgrey', edgecolor ='black', linestyle='--', zorder=-3)
-                circle2 = plt.Circle((0.0, 0.0), radius=2.5, facecolor='white', edgecolor ='black', linestyle='--', zorder=-2)
-                circle3 = plt.Circle((0.0, 0.0), radius=1.0, facecolor='lightgrey', edgecolor ='black', linestyle='--', zorder=-1)
-                axes.add_artist(circle1)
-                axes.add_artist(circle2)
-                axes.add_artist(circle3)
-
-                plt.title('return: {:04.2f}'.format(episode_returns[i].cpu().numpy()[0][0], fontsize=15))
-
-            plt.ylabel('y-position (ep {})'.format(i), fontsize=15)
-
-            x = list(map(lambda p: p[0], pos[i]))
-            y = list(map(lambda p: p[1], pos[i]))
-            plt.plot(x[0], y[0], 'bo')
-
-            plt.scatter(x, y, 1, 'g')
-
-            if i == num_episodes - 1:
-                plt.xlabel('x-position', fontsize=15)
-                plt.ylabel('y-position (ep {})'.format(i), fontsize=15)
-            plt.xlim(min_dim - 0.05 * span, max_dim + 0.05 * span)
-            plt.ylim(min_dim - 0.05 * span, max_dim + 0.05 * span)
-
-        plt.tight_layout()
-        if image_folder is not None:
-            if trial_num is None:
-                behaviour_dir = '{}/{}/{:02d}'.format(image_folder, iter_idx, task_num)
-            else:
-                behaviour_dir = '{}/{}/{}/{:02d}'.format(image_folder, iter_idx, trial_num, task_num)
-            plt.savefig(behaviour_dir+'_behaviour.pdf')
-            plt.close()
-
-            for i in range(num_episodes):
-                if encoder_vae is not None:
-                    np.savez(behaviour_dir + '_' + str(i) + '_data.npz',
-                             episode_latent_means_vae=episode_latent_means_vae[i].detach().cpu().numpy(),
-                             episode_latent_logvars_vae=episode_latent_logvars_vae[i].detach().cpu().numpy(),
-                             #episode_prev_obs=episode_prev_obs[i].detach().cpu().numpy(),
-                             #episode_next_obs=episode_next_obs[i].detach().cpu().numpy(),
-                             #episode_actions=episode_actions[i].detach().cpu().numpy(),
-                             episode_rewards=episode_rewards[i].detach().cpu().numpy(),
-                             episode_returns=episode_returns[i].detach().cpu().numpy(),
-                             episode_position= pos[i]
-                             )
-                else:
-                    np.savez(behaviour_dir + '_' + str(i) + '_data.npz',
-                             episode_latent_means=episode_latent_means[i].detach().cpu().numpy(),
-                             #episode_latent_logvars=episode_latent_logvars[i].detach().cpu().numpy(),
-                             #episode_prev_obs=episode_prev_obs[i].detach().cpu().numpy(),
-                             #episode_next_obs=episode_next_obs[i].detach().cpu().numpy(),
-                             #episode_actions=episode_actions[i].detach().cpu().numpy(),
-                             episode_rewards=episode_rewards[i].detach().cpu().numpy(),
-                             episode_returns=episode_returns[i].detach().cpu().numpy(),
-                             episode_position=pos[i]
-                             )
-        else:
-            plt.show()
+        # # plot the movement of the ant
+        # # print(pos)
+        # plt.figure(figsize=(4.25, 4 * num_episodes))
+        # min_dim = -3.5
+        # max_dim = 3.5
+        # span = max_dim - min_dim
+        #
+        # for i in range(num_episodes):
+        #     axes = plt.subplot(num_episodes, 1, i + 1)
+        #
+        #     if args.env_name == 'AntDir-v0':
+        #         plt.title('task: {} degrees, return: {:04.2f}'.format(np.degrees(task), episode_returns[i].cpu().numpy()[0][0]), fontsize=15)
+        #     if args.env_name == 'AntGoal-v0':
+        #         plt.plot(task[0], task[1], 'rx')
+        #         circle1 = plt.Circle((0.0, 0.0), radius=3.0, facecolor='lightgrey', edgecolor ='black', linestyle='--', zorder=-3)
+        #         circle2 = plt.Circle((0.0, 0.0), radius=2.5, facecolor='white', edgecolor ='black', linestyle='--', zorder=-2)
+        #         circle3 = plt.Circle((0.0, 0.0), radius=1.0, facecolor='lightgrey', edgecolor ='black', linestyle='--', zorder=-1)
+        #         axes.add_artist(circle1)
+        #         axes.add_artist(circle2)
+        #         axes.add_artist(circle3)
+        #
+        #         plt.title('return: {:04.2f}'.format(episode_returns[i].cpu().numpy()[0][0], fontsize=15))
+        #
+        #     plt.ylabel('y-position (ep {})'.format(i), fontsize=15)
+        #
+        #     x = list(map(lambda p: p[0], pos[i]))
+        #     y = list(map(lambda p: p[1], pos[i]))
+        #     plt.plot(x[0], y[0], 'bo')
+        #
+        #     plt.scatter(x, y, 1, 'g')
+        #
+        #     if i == num_episodes - 1:
+        #         plt.xlabel('x-position', fontsize=15)
+        #         plt.ylabel('y-position (ep {})'.format(i), fontsize=15)
+        #     plt.xlim(min_dim - 0.05 * span, max_dim + 0.05 * span)
+        #     plt.ylim(min_dim - 0.05 * span, max_dim + 0.05 * span)
+        #
+        # plt.tight_layout()
+        # if image_folder is not None:
+        #     if trial_num is None:
+        #         behaviour_dir = '{}/{}/{:02d}'.format(image_folder, iter_idx, task_num)
+        #     else:
+        #         behaviour_dir = '{}/{}/{}/{:02d}'.format(image_folder, iter_idx, trial_num, task_num)
+        #     plt.savefig(behaviour_dir+'_behaviour.pdf')
+        #     plt.close()
+        #
+        #     for i in range(num_episodes):
+        #         if encoder_vae is not None:
+        #             np.savez(behaviour_dir + '_' + str(i) + '_data.npz',
+        #                      episode_latent_means_vae=episode_latent_means_vae[i].detach().cpu().numpy(),
+        #                      episode_latent_logvars_vae=episode_latent_logvars_vae[i].detach().cpu().numpy(),
+        #                      #episode_prev_obs=episode_prev_obs[i].detach().cpu().numpy(),
+        #                      #episode_next_obs=episode_next_obs[i].detach().cpu().numpy(),
+        #                      #episode_actions=episode_actions[i].detach().cpu().numpy(),
+        #                      episode_rewards=episode_rewards[i].detach().cpu().numpy(),
+        #                      episode_returns=episode_returns[i].detach().cpu().numpy(),
+        #                      episode_position= pos[i]
+        #                      )
+        #         else:
+        #             np.savez(behaviour_dir + '_' + str(i) + '_data.npz',
+        #                      episode_latent_means=episode_latent_means[i].detach().cpu().numpy(),
+        #                      #episode_latent_logvars=episode_latent_logvars[i].detach().cpu().numpy(),
+        #                      #episode_prev_obs=episode_prev_obs[i].detach().cpu().numpy(),
+        #                      #episode_next_obs=episode_next_obs[i].detach().cpu().numpy(),
+        #                      #episode_actions=episode_actions[i].detach().cpu().numpy(),
+        #                      episode_rewards=episode_rewards[i].detach().cpu().numpy(),
+        #                      episode_returns=episode_returns[i].detach().cpu().numpy(),
+        #                      episode_position=pos[i]
+        #                      )
+        # else:
+        #     plt.show()
 
         if not return_pos:
             if encoder_vae is not None:
