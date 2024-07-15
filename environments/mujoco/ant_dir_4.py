@@ -8,12 +8,12 @@ from environments.mujoco.ant import AntEnv
 
 class AntDir4Env(AntEnv):
     def __init__(self, max_episode_steps=200, expert=False):
+        self.eval_task_list = [0 * 0.25 * np.pi,   2 * 0.25 * np.pi,  4 * 0.25 * np.pi,  6 * 0.25 * np.pi] + [0 * 0.25 * np.pi,   2 * 0.25 * np.pi,  4 * 0.25 * np.pi,  6 * 0.25 * np.pi] + [1 * 0.25 * np.pi,   3 * 0.25 * np.pi,  5 * 0.25 * np.pi,  7 * 0.25 * np.pi]  # this list is for visualisation
         self.expert = expert
         self.set_task(self.sample_tasks(1)[0])
         self._max_episode_steps = max_episode_steps
         self.task_dim = 1
         self.step_count = 0  
-        self.eval_task_list = [0 * 0.25 * np.pi,   2 * 0.25 * np.pi,  4 * 0.25 * np.pi,  6 * 0.25 * np.pi] + [0 * 0.25 * np.pi,   2 * 0.25 * np.pi,  4 * 0.25 * np.pi,  6 * 0.25 * np.pi] + [1 * 0.25 * np.pi,   3 * 0.25 * np.pi,  5 * 0.25 * np.pi,  7 * 0.25 * np.pi]  # this list is for visualisation
         super(AntDir4Env, self).__init__()
 
     def step(self, action):
