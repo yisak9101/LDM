@@ -17,7 +17,7 @@ def get_args(rest_args):
     #LDM params
     parser.add_argument('--exp_label', default='ldm', help='label for the experiment')
     parser.add_argument('--mixture_number', type=int, default=2, help='how many workers to train with mixture task')
-    parser.add_argument('--extrapolation_beta', type=float, default=2.0, help='extrapolation level for mixture model')
+    parser.add_argument('--extrapolation_beta', type=float, default=1.0, help='extrapolation level for mixture model')
 
     # variBAD
     parser.add_argument('--disable_varibad', type=boolean_argument, default=False,
