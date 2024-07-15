@@ -395,10 +395,41 @@ class MetaLearner:
                 indices_list = [[] for _ in range(self.eval_task_num)]
                 i = 0
 
+                tsne_tasks_lst = []
+                eval_tasks = []
+
+                if "cheetah-vel-inter" in self.args.env_name:
+                    tsne_tasks_lst = ["0.25", "3.25", "0.25", "3.25",
+                                      "0.75", "1.25", "1.75", "2.25", "2.75"]
+                    eval_tasks = range(2, 9)
+                elif "hopper-mass-inter" in self.args.env_name:
+                    tsne_tasks_lst = ["0.25", "3.25", "0.25", "3.25",
+                                      "0.75", "1.25", "1.75", "2.25", "2.75"]
+                    eval_tasks = range(2, 9)
+                elif "ant-dir-4" in self.args.env_name:
+                    tsne_tasks_lst = ["0pi", "2/4pi", "4/4pi", "6/4pi",
+                                      "0pi", "2/4pi", "4/4pi", "6/4pi",
+                                      "1/4pi", "3/4pi", "5/4pi", "7/4pi"]
+                    eval_tasks = range(4, 12)
+                elif "ant-dir-2" in self.args.env_name:
+                    tsne_tasks_lst = ["0pi", "2/4pi", "1/4pi", "3/4pi", "7/4pi"]
+                    eval_tasks = range(0, 5)
+                elif "walker-mass-inter" in self.args.env_name:
+                    tsne_tasks_lst = ["0.25", "3.25", "0.25", "3.25", "0.75", "1.25", "1.75", "2.25", "2.75"]
+                    eval_tasks = range(2, 9)
+                elif "ant-goal-inter" in self.args.env_name:
+                    tsne_tasks_lst = ["0.5,0.0", "0.0,0.5", "-0.5,0.0", "0.0,-0.5", "2.75,0.0", "0.0,2.75", "-2.75,0.0",
+                                      "0.0,-2.75", "0.5,0.0", "0.0,0.5", "-0.5,0.0", "0.0,-0.5", "2.75,0.0", "0.0,2.75",
+                                      "-2.75,0.0", "0.0,-2.75", "1.75,0.0", "0.0,1.75", "-1.75,0.0", "0.0,-1.75"]
+                    eval_tasks = range(8, 20)
+
                 for trial_index in range(trial_num):
                     os.makedirs('{}/{}/{}'.format(self.logger.full_output_folder, self.iter_idx, trial_index))
 
                     for task_num in range(self.eval_task_num):
+                        if task_num not in eval_tasks:
+                            continue
+
                         ret, latent_means = utl_eval.visualise_behaviour(args=self.args,
                                                            policy=self.policy,
                                                            image_folder=self.logger.full_output_folder,
@@ -423,29 +454,12 @@ class MetaLearner:
                 # t-SNE Plotting
                 colors = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan', 'lime',
                           'yellow', 'magenta', 'coral', 'skyblue', 'indigo', 'k', 'chocolate', 'navy', 'indigo', 'fuchsia']
-                tsne_tasks_lst = []
 
-                if "cheetah-vel-inter" in self.args.env_name:
-                    tsne_tasks_lst = ["0.25", "3.25", "0.25", "3.25",
-                                     "0.75", "1.25", "1.75", "2.25", "2.75"]
-                elif "hopper-mass-inter" in self.args.env_name:
-                    tsne_tasks_lst = ["0.25", "3.25", "0.25", "3.25",
-                                      "0.75", "1.25", "1.75", "2.25", "2.75"]
-                elif "ant-dir-4" in self.args.env_name:
-                    tsne_tasks_lst = ["0pi", "2/4pi", "4/4pi", "6/4pi",
-                                      "0pi", "2/4pi", "4/4pi", "6/4pi",
-                                      "1/4pi", "3/4pi", "5/4pi", "7/4pi"]
-                elif "ant-dir-2" in self.args.env_name:
-                    tsne_tasks_lst = ["0pi", "2/4pi", "1/4pi", "3/4pi", "7/4pi"]
-                elif "walker-mass-inter" in self.args.env_name:
-                    tsne_tasks_lst = ["0.25", "3.25", "0.25", "3.25", "0.75", "1.25", "1.75", "2.25", "2.75"]
-                elif "ant-goal-inter" in self.args.env_name:
-                    tsne_tasks_lst = ["0.5,0.0", "0.0,0.5", "-0.5,0.0", "0.0,-0.5", "2.75,0.0", "0.0,2.75", "-2.75,0.0", "0.0,-2.75", "0.5,0.0", "0.0,0.5", "-0.5,0.0", "0.0,-0.5", "2.75,0.0", "0.0,2.75", "-2.75,0.0", "0.0,-2.75", "1.75,0.0", "0.0,1.75", "-1.75,0.0", "0.0,-1.75"]
 
                 result = tsne_model.fit_transform(np.array(z_total_list_flatten))
                 print("len result", len(result))
                 plt.figure()
-                for i in range(self.eval_task_num):
+                for i in eval_tasks:
                     plt.scatter(result[:, 0][indices_list[i]],
                                 result[:, 1][indices_list[i]],
                                 s=5,

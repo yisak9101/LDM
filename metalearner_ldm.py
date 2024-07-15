@@ -5,6 +5,7 @@ import gym
 import numpy as np
 np.set_printoptions(suppress=True)
 import torch
+import os
 
 from algorithms.a2c import A2C
 from algorithms.online_storage import OnlineStorage
@@ -15,7 +16,8 @@ from utils import evaluation as utl_eval
 from utils import helpers as utl
 from utils.tb_logger import TBLogger
 from vae import VaribadVAE
-
+from MulticoreTSNE import MulticoreTSNE as TSNE
+import matplotlib.pyplot as plt
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print('metalearner_ldm loaded')
@@ -425,6 +427,7 @@ class MetaLearner:
             ret_rms = self.envs.venv.ret_rms if self.args2.norm_rew_for_policy else None
 
             os.makedirs('{}/{}'.format(self.logger.full_output_folder, self.iter_idx))
+            trial_num = 30
 
             if self.args2.env_name == 'GridNavi-v0': #gridworld
                 ret_list = []
@@ -462,19 +465,46 @@ class MetaLearner:
                 print(np.around(np.rot90(np.reshape(ret_list, (7, 7))), 2))
 
             else: #mujoco
-                ret_list = []
+                z_total_list_flatten = []
+                tsne_model = TSNE(n_components=2, random_state=0, perplexity=50, n_jobs=4)
+                indices_list = [[] for _ in range(self.eval_task_num)]
+                i = 0
 
-                #since mujoco test is stochastic due to random start, you may wish to repeat the evaluation multiple times
-                if (self.iter_idx + 1) % (10 * self.args2.vis_interval) == 0:
-                    trial_num = 1
-                else:
-                    trial_num = 1
+                tsne_tasks_lst = []
+                eval_tasks = []
+
+                if "cheetah-vel-inter" in self.args2.env_name:
+                    tsne_tasks_lst = ["0.25", "3.25", "0.25", "3.25",
+                                      "0.75", "1.25", "1.75", "2.25", "2.75"]
+                    eval_tasks = range(2, 9)
+                elif "hopper-mass-inter" in self.args2.env_name:
+                    tsne_tasks_lst = ["0.25", "3.25", "0.25", "3.25",
+                                      "0.75", "1.25", "1.75", "2.25", "2.75"]
+                    eval_tasks = range(2, 9)
+                elif "ant-dir-4" in self.args2.env_name:
+                    tsne_tasks_lst = ["0pi", "2/4pi", "4/4pi", "6/4pi",
+                                      "0pi", "2/4pi", "4/4pi", "6/4pi",
+                                      "1/4pi", "3/4pi", "5/4pi", "7/4pi"]
+                    eval_tasks = range(4, 12)
+                elif "ant-dir-2" in self.args2.env_name:
+                    tsne_tasks_lst = ["0pi", "2/4pi", "1/4pi", "3/4pi", "7/4pi"]
+                    eval_tasks = range(0, 5)
+                elif "walker-mass-inter" in self.args2.env_name:
+                    tsne_tasks_lst = ["0.25", "3.25", "0.25", "3.25", "0.75", "1.25", "1.75", "2.25", "2.75"]
+                    eval_tasks = range(2, 9)
+                elif "ant-goal-inter" in self.args2.env_name:
+                    tsne_tasks_lst = ["0.5,0.0", "0.0,0.5", "-0.5,0.0", "0.0,-0.5", "2.75,0.0", "0.0,2.75", "-2.75,0.0",
+                                      "0.0,-2.75", "0.5,0.0", "0.0,0.5", "-0.5,0.0", "0.0,-0.5", "2.75,0.0", "0.0,2.75",
+                                      "-2.75,0.0", "0.0,-2.75", "1.75,0.0", "0.0,1.75", "-1.75,0.0", "0.0,-1.75"]
+                    eval_tasks = range(8, 20)
+
                 for trial_index in range(trial_num):
                     os.makedirs('{}/{}/{}'.format(self.logger.full_output_folder, self.iter_idx, trial_index))
 
-                    ret_list_trial = []
                     for task_num in range(self.eval_task_num):
-                        ret = utl_eval.visualise_behaviour(args=self.args1,
+                        if task_num not in eval_tasks:
+                            continue
+                        ret, latent_means = utl_eval.visualise_behaviour(args=self.args1,
                                                            policy=self.policy,
                                                            image_folder=self.logger.full_output_folder,
                                                            iter_idx=self.iter_idx,
@@ -493,66 +523,34 @@ class MetaLearner:
                                                            trial_num=trial_index,
                                                            args_pol=self.args2,
                                                            )
-                        ret_list_trial.append(ret/self.args2.max_rollouts_per_task)
-                    ret_list.append(ret_list_trial)
+                        z_total_list_flatten.append(latent_means[0][-1].numpy(force=True))
+                        indices_list[task_num].append(i)
+                        i += 1
 
-                std_list = np.std(ret_list, axis=0)
-                ret_list = np.mean(ret_list, axis=0)
+                # t-SNE Plotting
+                colors = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan', 'lime',
+                          'yellow', 'magenta', 'coral', 'skyblue', 'indigo', 'k', 'chocolate', 'navy', 'indigo', 'fuchsia']
 
-                for task_num in range(self.eval_task_num):
-                    print("task num", task_num, "test return:", ret_list[task_num], "std:", std_list[task_num])
+                result = tsne_model.fit_transform(np.array(z_total_list_flatten))
+                print("len result", len(result))
+                plt.figure()
+                for i in eval_tasks:
+                    plt.scatter(result[:, 0][indices_list[i]],
+                                result[:, 1][indices_list[i]],
+                                s=5,
+                                c=colors[i],
+                                label=str(tsne_tasks_lst[i]))
+                plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
-                if self.args2.env_name == 'AntDir-v0':
-                    print("train task mean", np.mean(ret_list[:4]))
-                    print("test task mean", np.mean(ret_list[4:8]))
-                if self.args2.env_name == 'AntGoal-v0':
-                    print("train task mean", np.mean(ret_list[:4]), np.mean(ret_list[8:12]))
-                    print("test task mean", np.mean(ret_list[4:8]))
-                elif self.args2.env_name == 'HalfCheetahVel-v0':
-                    print("train task mean", np.mean(ret_list[:2]))
-                    print("test task mean", np.mean(ret_list[2:7]))
+                directory = os.path.dirname(self.args2.agent_log_dir)
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
 
-                
-
-                ########################
-                elif self.args2.env_name == "walker-mass-inter-v0":
-                    train_avg_return = np.mean(ret_list[:2])
-                    indistribution_avg_return = np.mean(ret_list[2:4])
-                    test_avg_return = np.mean(ret_list[4:])
-                elif self.args2.env_name == "hopper-mass-inter-v0":
-                    train_avg_return = np.mean(ret_list[:2])
-                    indistribution_avg_return = np.mean(ret_list[2:4])
-                    test_avg_return = np.mean(ret_list[4:])
-                elif self.args2.env_name == "cheetah-vel-inter-v0":
-                    train_avg_return = np.mean(ret_list[:2])
-                    indistribution_avg_return = np.mean(ret_list[2:4])
-                    test_avg_return = np.mean(ret_list[4:])
-                elif self.args2.env_name == "ant-dir-2개-v0":
-                    train_avg_return = np.mean(ret_list[:2])
-                    indistribution_avg_return = np.mean(ret_list[2:3])
-                    test_avg_return = np.mean(ret_list[3:])
-                elif self.args2.env_name == "ant-dir-4개-v0":
-                    train_avg_return = np.mean(ret_list[:4])
-                    indistribution_avg_return = np.mean(ret_list[4:8])
-                    test_avg_return = np.mean(ret_list[8:])
-                elif self.args2.env_name == "ant-goal-inter-v0":
-                    train_avg_return = np.mean(ret_list[:8])
-                    indistribution_avg_return = np.mean(ret_list[8:16])
-                    test_avg_return = np.mean(ret_list[16:])
-                elif self.args2.env_name == "cheetah-mass-inter-v0":
-                    train_avg_return = np.mean(ret_list[:2])
-                    indistribution_avg_return = np.mean(ret_list[2:4])
-                    test_avg_return = np.mean(ret_list[4:])
-                
-                wandb_log_dict = {
-                    "Eval/train_avg_return": train_avg_return,
-                    "Eval/indistribution_avg_return": indistribution_avg_return,
-                    "Eval/test_avg_return": test_avg_return,
-                }
-                wandb.log(wandb_log_dict, step=self.frames)
-
-
-                print('mixture number:', self.args1.mixture_number)
+                tsne_save_path = os.path.join(self.args2.agent_log_dir, "tSNE_" + str(self.iter_idx) + '.png')
+                plt.savefig(tsne_save_path, bbox_inches='tight')
+                wandb.log({
+                    "Eval_tsne/tSNE_EP" + str(self.iter_idx): [wandb.Image(tsne_save_path)]
+                })
         # --- evaluate policy ----
 
         if self.iter_idx % self.args2.eval_interval == 0:
