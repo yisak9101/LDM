@@ -19,6 +19,9 @@ from vae import VaribadVAE
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print('metalearner loaded')
 
+import wandb
+
+
 class MetaLearner:
     """
     Meta-Learner class with the main training loop for variBAD.
@@ -60,6 +63,17 @@ class MetaLearner:
         self.args.act_space = self.envs.action_space
         self.vae = VaribadVAE(self.args, self.logger, lambda: self.iter_idx)
         self.initialise_policy()
+
+        wandb.login(key="7316f79887c82500a01a529518f2af73d5520255")
+        env_name = args.env_name[:-3]
+        print("env_name", env_name)
+        wandb.init(
+            entity='mlic_academic',
+            project='김정모_metaRL_baselines',
+            group=env_name,
+            name='varibad-' + env_name + "-seed" + str(self.args.seed),
+            config=args
+        )
 
     def initialise_policy(self):
 
@@ -411,15 +425,63 @@ class MetaLearner:
                 for task_num in range(self.eval_task_num):
                     print("task num", task_num, "test return:", ret_list[task_num], "std:", std_list[task_num])
 
+                print("self.args.env_name", self.args.env_name)
+
                 if self.args.env_name == 'AntDir-v0':
                     print("train task mean", np.mean(ret_list[:4]))
                     print("test task mean", np.mean(ret_list[4:8]))
-                if self.args.env_name == 'AntGoal-v0':
+                elif self.args.env_name == 'AntGoal-v0':
                     print("train task mean", np.mean(ret_list[:4]), np.mean(ret_list[8:12]))
                     print("test task mean", np.mean(ret_list[4:8]))
                 elif self.args.env_name == 'HalfCheetahVel-v0':
                     print("train task mean", np.mean(ret_list[:2]))
                     print("test task mean", np.mean(ret_list[2:7]))
+                
+                # cheetah-vel-inter : [0.25, 3.25] + [0.75, 1.25, 1.75, 2.25, 2.75]
+                # ant-goal-inter : [[0.5,0.0],[0.0,0.5],[-0.5,0.0],[0.0,-0.5], [2.75,0.0],[0.0,2.75],[-2.75,0.0],[0.0,-2.75]] + [[1.75,0.0],[0.0,1.75],[-1.75,0.0],[0.0,-1.75]]  # case 4
+                # ant-dir-2 : [0 * 0.25 * np.pi,    2 * 0.25 * np.pi] + [3 * 0.25 * np.pi,    7 * 0.25 * np.pi]
+                # ant-dir-4 : [0 * 0.25 * np.pi,   2 * 0.25 * np.pi,  4 * 0.25 * np.pi,  6 * 0.25 * np.pi] + [1 * 0.25 * np.pi,   3 * 0.25 * np.pi,  5 * 0.25 * np.pi,  7 * 0.25 * np.pi]
+                # walker-mass-inter : [0.25, 3.25] + [0.75, 1.25, 1.75, 2.25, 2.75]
+                # hopper-mass-inter : [0.25, 3.25] + [0.75, 1.25, 1.75, 2.25, 2.75]
+                
+                
+                elif self.args.env_name == "walker-mass-inter-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:4])
+                    test_avg_return = np.mean(ret_list[4:])
+                elif self.args.env_name == "hopper-mass-inter-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:4])
+                    test_avg_return = np.mean(ret_list[4:])
+                elif self.args.env_name == "cheetah-vel-inter-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:4])
+                    test_avg_return = np.mean(ret_list[4:])
+                elif self.args.env_name == "ant-dir-2개-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:3])
+                    test_avg_return = np.mean(ret_list[3:])
+                elif self.args.env_name == "ant-dir-4개-v0":
+                    train_avg_return = np.mean(ret_list[:4])
+                    indistribution_avg_return = np.mean(ret_list[4:8])
+                    test_avg_return = np.mean(ret_list[8:])
+                elif self.args.env_name == "ant-goal-inter-v0":
+                    train_avg_return = np.mean(ret_list[:8])
+                    indistribution_avg_return = np.mean(ret_list[8:16])
+                    test_avg_return = np.mean(ret_list[16:])
+                elif self.args.env_name == "cheetah-mass-inter-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:4])
+                    test_avg_return = np.mean(ret_list[4:])
+                
+                wandb_log_dict = {
+                    "Eval/train_avg_return": train_avg_return,
+                    "Eval/indistribution_avg_return": indistribution_avg_return,
+                    "Eval/test_avg_return": test_avg_return,
+                }
+                wandb.log(wandb_log_dict, step=self.frames)
+
+
 
         # --- evaluate policy ----
 

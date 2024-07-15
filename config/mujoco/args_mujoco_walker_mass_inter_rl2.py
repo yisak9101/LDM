@@ -27,31 +27,31 @@ def get_args(rest_args):
                         help='Train a normal FF policy without the variBAD architecture')
 
     # env
-    parser.add_argument('--env_name', default='AntGoal-v0', help='environment to train on')
+    parser.add_argument('--env_name', default='walker-mass-inter-v0', help='environment to train on')
     parser.add_argument('--norm_obs_for_policy', type=boolean_argument, default=True,
                         help='normalise env observations (for policy)')
     parser.add_argument('--norm_rew_for_policy', type=boolean_argument, default=True,
                         help='normalise env rewards (for policy)')
     parser.add_argument('--normalise_actions', type=boolean_argument, default=False, help='output normalised actions')
-    parser.add_argument('--eval_task_num', type=int, default=12, help='how many environments to evaluate on')
+    parser.add_argument('--eval_task_num', type=int, default=9, help='how many environments to evaluate on')
 
     # --- POLICY ---
 
     # network
-    parser.add_argument('--policy_layers', nargs='+', default=[128, 128])  # [128] 
+    parser.add_argument('--policy_layers', nargs='+', default=[128])
     parser.add_argument('--policy_activation_function', type=str, default='tanh', help='tanh, relu, leaky-relu')
 
     # algo
     parser.add_argument('--policy', type=str, default='ppo', help='choose: a2c, ppo, sac, optimal, oracle')
 
     # ppo specific
-    parser.add_argument('--ppo_num_epochs', type=int, default=1, help='number of epochs per PPO update')
-    parser.add_argument('--ppo_num_minibatch', type=int, default=8, help='number of minibatches to split the data')
+    parser.add_argument('--ppo_num_epochs', type=int, default=2, help='number of epochs per PPO update')
+    parser.add_argument('--ppo_num_minibatch', type=int, default=1, help='number of minibatches to split the data')
     parser.add_argument('--ppo_use_huberloss', type=boolean_argument, default=True,
                         help='use huber loss instead of MSE')
     parser.add_argument('--ppo_use_clipped_value_loss', type=boolean_argument, default=True,
                         help='use huber loss instead of MSE')
-    parser.add_argument('--ppo_clip_param', type=float, default=0.1, help='clamp param')
+    parser.add_argument('--ppo_clip_param', type=float, default=0.05, help='clamp param')
 
     # other hyperparameters
     parser.add_argument('--lr_policy', type=float, default=7e-4, help='learning rate (default: 7e-4)')
@@ -64,10 +64,8 @@ def get_args(rest_args):
     parser.add_argument('--policy_value_loss_coef', type=float, default=0.5,
                         help='value loss coefficient (default: 0.5)')
     parser.add_argument('--policy_entropy_coef', type=float, default=0.01,
-                        help='entropy term coefficient (default: 0.01)')  
-    # policy_entropy_coef 0.01
+                        help='entropy term coefficient (default: 0.01)')
     parser.add_argument('--policy_gamma', type=float, default=0.97, help='discount factor for rewards (default: 0.99)')
-    # policy_gamma 0.97
     parser.add_argument('--policy_use_gae', type=boolean_argument, default=True,
                         help='use generalized advantage estimation')
     parser.add_argument('--policy_tau', type=float, default=0.9, help='gae parameter (default: 0.95)')

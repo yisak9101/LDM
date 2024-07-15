@@ -171,27 +171,27 @@ def visualise_behaviour(args,
                      trial_num = trial_num,
                      )
 
-        if not (args.disable_stochasticity_in_latent and args.disable_decoder):
-            plot_vae_loss(args,
-                          latent_means,
-                          latent_logvars,
-                          episode_prev_obs,
-                          episode_next_obs,
-                          episode_actions,
-                          episode_rewards,
-                          episode_task,
-                          image_folder=image_folder,
-                          iter_idx=iter_idx,
-                          reward_decoder=reward_decoder,
-                          state_decoder=state_decoder,
-                          task_decoder=task_decoder,
-                          compute_task_reconstruction_loss=compute_task_reconstruction_loss,
-                          compute_rew_reconstruction_loss=compute_rew_reconstruction_loss,
-                          compute_state_reconstruction_loss=compute_state_reconstruction_loss,
-                          compute_kl_loss=compute_kl_loss,
-                          task_num = task_num,
-                          trial_num  = trial_num,
-                          )
+        # if not (args.disable_stochasticity_in_latent and args.disable_decoder):
+        #     plot_vae_loss(args,
+        #                   latent_means,
+        #                   latent_logvars,
+        #                   episode_prev_obs,
+        #                   episode_next_obs,
+        #                   episode_actions,
+        #                   episode_rewards,
+        #                   episode_task,
+        #                   image_folder=image_folder,
+        #                   iter_idx=iter_idx,
+        #                   reward_decoder=reward_decoder,
+        #                   state_decoder=state_decoder,
+        #                   task_decoder=task_decoder,
+        #                   compute_task_reconstruction_loss=compute_task_reconstruction_loss,
+        #                   compute_rew_reconstruction_loss=compute_rew_reconstruction_loss,
+        #                   compute_state_reconstruction_loss=compute_state_reconstruction_loss,
+        #                   compute_kl_loss=compute_kl_loss,
+        #                   task_num = task_num,
+        #                   trial_num  = trial_num,
+        #                   )
 
     env.close()
 
@@ -528,9 +528,9 @@ def plot_vae_loss(args,
 
     plt.plot(x, vae_kl_term.cpu().detach().numpy(), 'b-')
     for tj in np.cumsum([0, *[num_episode_steps for _ in range(num_rollouts)]]):
-        span = vae_kl_term.max() - vae_kl_term.min()
+        span = vae_kl_term.max().detach().cpu().numpy() - vae_kl_term.min().detach().cpu().numpy()
         plt.plot([tj + 0.5, tj + 0.5],
-                 [vae_kl_term.min() - span * 0.05, vae_kl_term.max() + span * 0.05],
+                 [vae_kl_term.min().detach().cpu().numpy() - span * 0.05, vae_kl_term.max().detach().cpu().numpy() + span * 0.05],
                  'k--', alpha=0.5)
     plt.xlabel('env steps', fontsize=15)
     plt.ylabel('KL term', fontsize=15)

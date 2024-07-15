@@ -7,7 +7,9 @@ from environments.mujoco.rand_param_envs.gym import utils
 class HopperRandParamsEnv(RandomEnv, utils.EzPickle):
     def __init__(self, log_scale_limit=3.0):
         self._max_episode_steps = 200
-        self._elapsed_steps = -1  # the thing below takes one step
+        # self._elapsed_steps = -1  # the thing below takes one step
+
+        self.eval_task_list = [0.75, 1.25, 1.75, 2.25, 2.75]
         RandomEnv.__init__(self, log_scale_limit, 'hopper.xml', 4)
         utils.EzPickle.__init__(self)
 
@@ -23,11 +25,11 @@ class HopperRandParamsEnv(RandomEnv, utils.EzPickle):
         done = not (np.isfinite(s).all() and (np.abs(s[2:]) < 100).all() and
                     (height > .7) and (abs(ang) < .2))
         ob = self._get_obs()
-        self._elapsed_steps += 1
+        # self._elapsed_steps += 1
         info = {'task': self.get_task()}
-        if self._elapsed_steps == self._max_episode_steps:
-            done = True
-            info['bad_transition'] = True
+        # if self._elapsed_steps == self._max_episode_steps:
+        #     done = True
+        #     info['bad_transition'] = True
         return ob, reward, done, info
 
     def _get_obs(self):
@@ -50,19 +52,5 @@ class HopperRandParamsEnv(RandomEnv, utils.EzPickle):
 
     def _reset(self):
         ob = super()._reset()
-        self._elapsed_steps = 0
+        # self._elapsed_steps = 0
         return ob
-
-
-class HopperRandParamsOracleEnv(HopperRandParamsEnv):
-    def _get_obs(self):
-        if hasattr(self, 'cur_params'):
-            task = self.get_task()
-            task = np.concatenate([task[k].reshape(-1) for k in task.keys()])[:, np.newaxis]
-        else:
-            task = np.zeros((self.rand_param_dim, 1))
-        return np.concatenate([
-            self.model.data.qpos.flat[1:],
-            np.clip(self.model.data.qvel.flat, -10, 10),
-            task.flat,
-        ])

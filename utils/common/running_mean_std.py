@@ -2,9 +2,9 @@
 Taken from https://github.com/openai/baselines
 """
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
 
-from utils.common.tf_util import get_session
+# from utils.common.tf_util import get_session
 
 
 class RunningMeanStd(object):

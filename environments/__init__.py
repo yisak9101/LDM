@@ -169,3 +169,122 @@ register(
     entry_point='environments.navigation.gridworld:GridNavi',
     kwargs={'belief_oracle': True},
 )
+
+
+
+
+
+
+
+####################################################################
+####################################################################
+####################################################################
+
+
+register(
+    id='walker-mass-inter-v0',
+    entry_point='environments.mujoco.rand_param_envs.walker2d_mass_inter:Walker2DMassInterEnv',
+    max_episode_steps=200
+)
+register(
+    id='hopper-mass-inter-v0',
+    entry_point='environments.mujoco.rand_param_envs.hopper_mass_inter:HopperMassInterEnv',
+    max_episode_steps=200
+)
+
+
+register(
+    'ant-dir-2개-v0',
+    entry_point='environments.wrappers:mujoco_wrapper',
+    kwargs={'entry_point': 'environments.mujoco.ant_dir_2:AntDir2Env',
+            'max_episode_steps': 200},
+    max_episode_steps=200
+)
+
+register(
+    'ant-dir-4개-v0',
+    entry_point='environments.wrappers:mujoco_wrapper',
+    kwargs={'entry_point': 'environments.mujoco.ant_dir_4:AntDir4Env',
+            'max_episode_steps': 200},
+    max_episode_steps=200
+)
+
+register(
+    'ant-goal-inter-v0',
+    entry_point='environments.wrappers:mujoco_wrapper',
+    kwargs={'entry_point': 'environments.mujoco.ant_goal_inter:AntGoalInterEnv',
+            'max_episode_steps': 200},
+    max_episode_steps=200
+)
+
+
+register(
+    'cheetah-vel-inter-v0',
+    entry_point='environments.wrappers:mujoco_wrapper',
+    kwargs={'entry_point': 'environments.mujoco.half_cheetah_vel_inter:HalfCheetahVelInterEnv',
+            'max_episode_steps': 200},
+    max_episode_steps=200
+)
+
+
+
+# register(
+#     id='cheetah-mass-inter-v0',
+#     entry_point='environments.mujoco.rand_param_envs.cheetah_mass_inter:HalfCheetahMassEnv',
+#     max_episode_steps=200
+# )
+
+
+
+########################################################
+
+register(
+    id='walker-mass-inter-expert-v0',
+    entry_point='environments.mujoco.rand_param_envs.walker2d_mass_inter:Walker2DMassInterEnv',
+    kwargs={'expert': True},
+    max_episode_steps=200
+)
+register(
+    id='hopper-mass-inter-expert-v0',
+    entry_point='environments.mujoco.rand_param_envs.hopper_mass_inter:HopperMassInterEnv',
+    kwargs={'expert': True},
+    max_episode_steps=200
+)
+
+
+register(
+    'ant-dir-2개-expert-v0',
+    entry_point='environments.wrappers:mujoco_wrapper',
+    kwargs={'entry_point': 'environments.mujoco.ant_dir_2:AntDir2Env',
+            'max_episode_steps': 200, 'expert': True},
+    max_episode_steps=200
+)
+
+register(
+    'ant-dir-4개-expert-v0',
+    entry_point='environments.wrappers:mujoco_wrapper',
+    kwargs={'entry_point': 'environments.mujoco.ant_dir_4:AntDir4Env',
+            'max_episode_steps': 200, 'expert': True},
+    max_episode_steps=200
+)
+
+register(
+    'ant-goal-inter-expert-v0',
+    entry_point='environments.wrappers:mujoco_wrapper',
+    kwargs={'entry_point': 'environments.mujoco.ant_goal_inter:AntGoalInterEnv',
+            'max_episode_steps': 200, 'expert': True},
+    max_episode_steps=200,
+)
+
+register(
+    'cheetah-vel-inter-expert-v0',
+    entry_point='environments.wrappers:mujoco_wrapper',
+    kwargs={'entry_point': 'environments.mujoco.half_cheetah_vel_inter:HalfCheetahVelInterEnv',
+            'max_episode_steps': 200, 'expert': True},
+    max_episode_steps=200
+)
+
+
+
+
+
