@@ -12,9 +12,11 @@ class AntGoalInterEnv(AntEnv):
         self._max_episode_steps = max_episode_steps
         self.task_dim = 4
 
-        self.eval_task_list = [[0.5,0.0],[0.0,0.5],[-0.5,0.0],[0.0,-0.5], [2.75,0.0],[0.0,2.75],[-2.75,0.0],[0.0,-2.75]] + [[0.5,0.0],[0.0,0.5],[-0.5,0.0],[0.0,-0.5], [2.75,0.0],[0.0,2.75],[-2.75,0.0],[0.0,-2.75]] + [[1.75,0.0],[0.0,1.75],[-1.75,0.0],[0.0,-1.75]]  # case 4
+        train_tsne_tasks_list, test_tsne_tasks_list = self.sample_tsne_tasks()
+        self.eval_task_list = train_tsne_tasks_list + test_tsne_tasks_list  # 32개, 16개 = 48개
 
         super(AntGoalInterEnv, self).__init__()
+
 
     def step(self, action):
         self.do_simulation(action, self.frame_skip)
@@ -38,6 +40,28 @@ class AntGoalInterEnv(AntEnv):
             reward_survive=survive_reward,
             task=self.get_task()
         )
+
+    def sample_tsne_tasks(self):
+        theta_list = np.array([0, 1, 2, 3, 4, 5, 6, 7]) * np.pi / 4
+
+        # train_r_list = np.array([0.5, 1.0, 1.5, 2.0, 2.5, 3.0])
+        train_r_list = np.array([0.5, 1.0, 2.5, 3.0])
+        test_r_list = np.array([1.5, 2.0])
+        train_tsne_tasks_list, test_tsne_tasks_list = [], []
+
+        for r in train_r_list:
+            for theta in theta_list:
+                x = r * np.cos(theta)
+                y = r * np.sin(theta)
+                train_tsne_tasks_list.append([x, y])
+
+        for r in test_r_list:
+            for theta in theta_list:
+                x = r * np.cos(theta)
+                y = r * np.sin(theta)
+                test_tsne_tasks_list.append([x, y])
+
+        return train_tsne_tasks_list, test_tsne_tasks_list
 
     def sample_tasks(self, num_tasks):
         oracle = False
