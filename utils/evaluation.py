@@ -194,12 +194,13 @@ def visualise_behaviour(args,
         #                   )
 
     env.close()
+    latent_sample = torch.normal(latent_means[0][-1], torch.exp(0.5 * latent_logvars[0][-1]))
 
     #if torch.is_tensor(episode_returns):
     #    return torch.stack(episode_returns).sum(dim=0).cpu().numpy()[0][0]
     #else:
     #    return(sum(episode_returns))
-    return torch.stack(episode_returns).sum(dim=0).cpu().numpy()[0][0], latent_means
+    return torch.stack(episode_returns).sum(dim=0).cpu().numpy()[0][0], latent_sample
 
 
 def get_test_rollout(args, env, policy, encoder=None, reward_decoder=None, image_folder=None, iter_idx=None, task_num=None, encoder_vae=None):

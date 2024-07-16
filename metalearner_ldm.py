@@ -3,6 +3,9 @@ import time
 
 import gym
 import numpy as np
+
+from utils.latent_vectors import LatentVectors, EnvType
+
 np.set_printoptions(suppress=True)
 import torch
 import os
@@ -78,6 +81,9 @@ class MetaLearner:
         self.vae_pol = VaribadVAE(self.args2, self.logger, lambda: self.iter_idx) #policy network
 
         self.initialise_policy()
+
+        self.tsne_log_dir = f"{self.logger.full_output_folder}/tsne"
+        os.makedirs(self.tsne_log_dir)
 
         wandb.login(key="7316f79887c82500a01a529518f2af73d5520255")
         env_name = args1.env_name[:-3]
@@ -466,91 +472,37 @@ class MetaLearner:
 
             else: #mujoco
                 z_total_list_flatten = []
-                tsne_model = TSNE(n_components=2, random_state=0, perplexity=50, n_jobs=4)
                 indices_list = [[] for _ in range(self.eval_task_num)]
                 i = 0
-
-                tsne_tasks_lst = []
-                eval_tasks = []
-
-                if "cheetah-vel-inter" in self.args2.env_name:
-                    tsne_tasks_lst = ["0.25", "3.25", "0.25", "3.25",
-                                      "0.75", "1.25", "1.75", "2.25", "2.75"]
-                    eval_tasks = range(2, 9)
-                elif "hopper-mass-inter" in self.args2.env_name:
-                    tsne_tasks_lst = ["0.25", "3.25", "0.25", "3.25",
-                                      "0.75", "1.25", "1.75", "2.25", "2.75"]
-                    eval_tasks = range(2, 9)
-                elif "ant-dir-4" in self.args2.env_name:
-                    tsne_tasks_lst = ["0pi", "2/4pi", "4/4pi", "6/4pi",
-                                      "0pi", "2/4pi", "4/4pi", "6/4pi",
-                                      "1/4pi", "3/4pi", "5/4pi", "7/4pi"]
-                    eval_tasks = range(4, 12)
-                elif "ant-dir-2" in self.args2.env_name:
-                    tsne_tasks_lst = ["0pi", "2/4pi", "1/4pi", "3/4pi", "7/4pi"]
-                    eval_tasks = range(0, 5)
-                elif "walker-mass-inter" in self.args2.env_name:
-                    tsne_tasks_lst = ["0.25", "3.25", "0.25", "3.25", "0.75", "1.25", "1.75", "2.25", "2.75"]
-                    eval_tasks = range(2, 9)
-                elif "ant-goal-inter" in self.args2.env_name:
-                    tsne_tasks_lst = ["0.5,0.0", "0.0,0.5", "-0.5,0.0", "0.0,-0.5", "2.75,0.0", "0.0,2.75", "-2.75,0.0",
-                                      "0.0,-2.75", "0.5,0.0", "0.0,0.5", "-0.5,0.0", "0.0,-0.5", "2.75,0.0", "0.0,2.75",
-                                      "-2.75,0.0", "0.0,-2.75", "1.75,0.0", "0.0,1.75", "-1.75,0.0", "0.0,-1.75"]
-                    eval_tasks = range(8, 20)
-
                 for trial_index in range(trial_num):
                     os.makedirs('{}/{}/{}'.format(self.logger.full_output_folder, self.iter_idx, trial_index))
-
                     for task_num in range(self.eval_task_num):
-                        if task_num not in eval_tasks:
-                            continue
-                        ret, latent_means = utl_eval.visualise_behaviour(args=self.args1,
-                                                           policy=self.policy,
-                                                           image_folder=self.logger.full_output_folder,
-                                                           iter_idx=self.iter_idx,
-                                                           obs_rms=obs_rms,
-                                                           ret_rms=ret_rms,
-                                                           encoder=self.vae_pol.encoder,
-                                                           reward_decoder=self.vae.reward_decoder,
-                                                           state_decoder=self.vae.state_decoder,
-                                                           task_decoder=self.vae.task_decoder,
-                                                           compute_rew_reconstruction_loss=self.vae.compute_rew_reconstruction_loss,
-                                                           compute_state_reconstruction_loss=self.vae.compute_state_reconstruction_loss,
-                                                           compute_task_reconstruction_loss=self.vae.compute_task_reconstruction_loss,
-                                                           compute_kl_loss=self.vae.compute_kl_loss,
-                                                           task_num=task_num,
-                                                           encoder_vae=self.vae.encoder,
-                                                           trial_num=trial_index,
-                                                           args_pol=self.args2,
-                                                           )
-                        z_total_list_flatten.append(latent_means[0][-1].numpy(force=True))
+                        _, latent_sample = utl_eval.visualise_behaviour(args=self.args1,
+                                                                        policy=self.policy,
+                                                                        image_folder=self.logger.full_output_folder,
+                                                                        iter_idx=self.iter_idx,
+                                                                        obs_rms=obs_rms,
+                                                                        ret_rms=ret_rms,
+                                                                        encoder=self.vae_pol.encoder,
+                                                                        reward_decoder=self.vae.reward_decoder,
+                                                                        state_decoder=self.vae.state_decoder,
+                                                                        task_decoder=self.vae.task_decoder,
+                                                                        compute_rew_reconstruction_loss=self.vae.compute_rew_reconstruction_loss,
+                                                                        compute_state_reconstruction_loss=self.vae.compute_state_reconstruction_loss,
+                                                                        compute_task_reconstruction_loss=self.vae.compute_task_reconstruction_loss,
+                                                                        compute_kl_loss=self.vae.compute_kl_loss,
+                                                                        task_num=task_num,
+                                                                        encoder_vae=self.vae.encoder,
+                                                                        trial_num=trial_index,
+                                                                        args_pol=self.args2,
+                                                                        )
+                        z_total_list_flatten.append(latent_sample.numpy(force=True))
                         indices_list[task_num].append(i)
                         i += 1
-
-                # t-SNE Plotting
-                colors = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan', 'lime',
-                          'yellow', 'magenta', 'coral', 'skyblue', 'indigo', 'k', 'chocolate', 'navy', 'indigo', 'fuchsia']
-
-                result = tsne_model.fit_transform(np.array(z_total_list_flatten))
-                print("len result", len(result))
-                plt.figure()
-                for i in eval_tasks:
-                    plt.scatter(result[:, 0][indices_list[i]],
-                                result[:, 1][indices_list[i]],
-                                s=5,
-                                c=colors[i],
-                                label=str(tsne_tasks_lst[i]))
-                plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-
-                directory = os.path.dirname(self.args2.agent_log_dir)
-                if not os.path.exists(directory):
-                    os.makedirs(directory)
-
-                tsne_save_path = os.path.join(self.args2.agent_log_dir, "tSNE_" + str(self.iter_idx) + '.png')
-                plt.savefig(tsne_save_path, bbox_inches='tight')
-                wandb.log({
-                    "Eval_tsne/tSNE_EP" + str(self.iter_idx): [wandb.Image(tsne_save_path)]
-                })
+                latent_vectors = LatentVectors(np.asarray(z_total_list_flatten), indices_list, self.iter_idx,
+                                               EnvType.parse(self.args2.env_name))
+                latent_vectors.save(self.tsne_log_dir)
+                latent_vectors.save_plot(self.tsne_log_dir, wandb)
         # --- evaluate policy ----
 
         if self.iter_idx % self.args2.eval_interval == 0:

@@ -30,7 +30,7 @@ def get_args(rest_args):
     parser.add_argument('--norm_rew_for_policy', type=boolean_argument, default=True,
                         help='normalise env rewards (for policy)')
     parser.add_argument('--normalise_actions', type=boolean_argument, default=False, help='output normalised actions')
-    parser.add_argument('--eval_task_num', type=int, default=12, help='how many environments to evaluate on')
+    parser.add_argument('--eval_task_num', type=int, default=8, help='how many environments to evaluate on')
 
     # --- POLICY ---
 
