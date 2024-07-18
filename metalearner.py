@@ -396,15 +396,17 @@ class MetaLearner:
                 print(np.around(np.rot90(np.reshape(ret_list, (7, 7))), 2))
 
             else: # mujoco
-                z_total_list_flatten = []
+                ret_list = []
+                latent_samples_200step = []
+                latent_samples_400step = []
                 indices_list = [[] for _ in range(self.eval_task_num)]
                 i = 0
 
                 for trial_index in range(trial_num):
                     os.makedirs('{}/{}/{}'.format(self.logger.full_output_folder, self.iter_idx, trial_index))
-
+                    ret_list_trial = []
                     for task_num in range(self.eval_task_num):
-                        _, latent_sample = utl_eval.visualise_behaviour(args=self.args,
+                        ret, latent_sample_200step, latent_sample_400step = utl_eval.visualise_behaviour(args=self.args,
                                                            policy=self.policy,
                                                            image_folder=self.logger.full_output_folder,
                                                            iter_idx=self.iter_idx,
@@ -421,14 +423,73 @@ class MetaLearner:
                                                            task_num=task_num,
                                                            trial_num=trial_index,
                                                            )
-                        z_total_list_flatten.append(latent_sample.numpy(force=True))
+                        latent_samples_200step.append(latent_sample_200step.numpy(force=True))
+                        latent_samples_400step.append(latent_sample_400step.numpy(force=True))
+                        ret_list_trial.append(ret/self.args.max_rollouts_per_task)
                         indices_list[task_num].append(i)
                         i += 1
+                    ret_list.append(ret_list_trial)
+                latent_vectors_200step = LatentVectors(np.asarray(latent_samples_200step), indices_list, self.iter_idx, EnvType.parse(self.args.env_name))
+                latent_vectors_200step.save(self.tsne_log_dir, f'{self.iter_idx}_200step')
+                latent_vectors_200step.save_plot(self.tsne_log_dir, f'{self.iter_idx}_200step', wandb)
+                latent_vectors_400step = LatentVectors(np.asarray(latent_samples_400step), indices_list, self.iter_idx, EnvType.parse(self.args.env_name))
+                latent_vectors_400step.save(self.tsne_log_dir, f'{self.iter_idx}_400step')
+                latent_vectors_400step.save_plot(self.tsne_log_dir, f'{self.iter_idx}_400step', wandb)
 
-                latent_vectors = LatentVectors(np.asarray(z_total_list_flatten), indices_list, self.iter_idx, EnvType.parse(self.args.env_name))
-                latent_vectors.save(self.tsne_log_dir)
-                latent_vectors.save_plot(self.tsne_log_dir, wandb)
+                ret_list = np.mean(ret_list, axis=0)
 
+                if self.args.env_name == 'AntDir-v0':
+                    print("train task mean", np.mean(ret_list[:4]))
+                    print("test task mean", np.mean(ret_list[4:8]))
+                elif self.args.env_name == 'AntGoal-v0':
+                    print("train task mean", np.mean(ret_list[:4]), np.mean(ret_list[8:12]))
+                    print("test task mean", np.mean(ret_list[4:8]))
+                elif self.args.env_name == 'HalfCheetahVel-v0':
+                    print("train task mean", np.mean(ret_list[:2]))
+                    print("test task mean", np.mean(ret_list[2:7]))
+
+                # cheetah-vel-inter : [0.25, 3.25] + [0.75, 1.25, 1.75, 2.25, 2.75]
+                # ant-goal-inter : [[0.5,0.0],[0.0,0.5],[-0.5,0.0],[0.0,-0.5], [2.75,0.0],[0.0,2.75],[-2.75,0.0],[0.0,-2.75]] + [[1.75,0.0],[0.0,1.75],[-1.75,0.0],[0.0,-1.75]]  # case 4
+                # ant-dir-2 : [0 * 0.25 * np.pi,    2 * 0.25 * np.pi] + [3 * 0.25 * np.pi,    7 * 0.25 * np.pi]
+                # ant-dir-4 : [0 * 0.25 * np.pi,   2 * 0.25 * np.pi,  4 * 0.25 * np.pi,  6 * 0.25 * np.pi] + [1 * 0.25 * np.pi,   3 * 0.25 * np.pi,  5 * 0.25 * np.pi,  7 * 0.25 * np.pi]
+                # walker-mass-inter : [0.25, 3.25] + [0.75, 1.25, 1.75, 2.25, 2.75]
+                # hopper-mass-inter : [0.25, 3.25] + [0.75, 1.25, 1.75, 2.25, 2.75]
+
+                elif self.args.env_name == "walker-mass-inter-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:4])
+                    test_avg_return = np.mean(ret_list[4:])
+                elif self.args.env_name == "hopper-mass-inter-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:4])
+                    test_avg_return = np.mean(ret_list[4:])
+                elif self.args.env_name == "cheetah-vel-inter-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:4])
+                    test_avg_return = np.mean(ret_list[4:])
+                elif self.args.env_name == "ant-dir-2개-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:3])
+                    test_avg_return = np.mean(ret_list[3:])
+                elif self.args.env_name == "ant-dir-4개-v0":
+                    train_avg_return = np.mean(ret_list[:4])
+                    indistribution_avg_return = np.mean(ret_list[4:8])
+                    test_avg_return = np.mean(ret_list[8:])
+                elif self.args.env_name == "ant-goal-inter-v0":
+                    train_avg_return = np.mean(ret_list[:8])
+                    indistribution_avg_return = np.mean(ret_list[8:16])
+                    test_avg_return = np.mean(ret_list[16:])
+                elif self.args.env_name == "cheetah-mass-inter-v0":
+                    train_avg_return = np.mean(ret_list[:2])
+                    indistribution_avg_return = np.mean(ret_list[2:4])
+                    test_avg_return = np.mean(ret_list[4:])
+
+                wandb_log_dict = {
+                    "Eval/train_avg_return": train_avg_return,
+                    "Eval/indistribution_avg_return": indistribution_avg_return,
+                    "Eval/test_avg_return": test_avg_return,
+                }
+                wandb.log(wandb_log_dict, step=self.frames)
         # --- evaluate policy ----
 
         if self.iter_idx % self.args.eval_interval == 0:

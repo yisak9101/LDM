@@ -94,16 +94,22 @@ class LatentVectors:
             env=EnvType.parse(json_load["env"])
         )
 
-    def save(self, path: str):
+    def save(self, path: str, file_name: str = None):
         json_dump = json.dumps(
             {'vectors': self.vectors, 'indices': self.indices, 'epoch': self.epoch, 'env': self.env.value.name},
             cls=NumpyEncoder)
-        full_path = f"{path}/{self.epoch}.json"
+        if file_name is None:
+            full_path = f"{path}/{self.epoch}.json"
+        else:
+            full_path = f"{path}/{file_name}.json"
         with open(full_path, 'w') as json_file:
             json_file.write(json_dump)
 
-    def save_plot(self, path: str, wandb=None):
-        full_path = f"{path}/{self.epoch}.png"
+    def save_plot(self, path: str, file_name: str = None, wandb=None):
+        if file_name is None:
+            full_path = f"{path}/{self.epoch}.png"
+        else:
+            full_path = f"{path}/{file_name}.png"
         plt.figure()
         env_detail = self.env.value
         result = LatentVectors.tsne_model.fit_transform(np.array(self.vectors))
@@ -155,7 +161,7 @@ class LatentVectors:
 
         if wandb is not None:
             wandb.log({
-                "Eval_tsne/tSNE_EP" + str(self.epoch): [wandb.Image(full_path)]
+                "Eval_tsne/tSNE_EP" + file_name: [wandb.Image(full_path)]
             })
 
 # path='/home/mlic/mo/baselines/LDM_yisak_tsne/logs/logs_cheetah-vel-inter-v0/varibad_4957__16:07_13:45:22/tsne'
