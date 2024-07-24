@@ -70,7 +70,7 @@ class MetaLearner:
             entity='mlic_academic',
             project='김정모_metaRL_baselines',
             group=env_name,
-            name='varibad-' + env_name + "-seed" + str(self.args.seed),
+            name=args.exp_label + "-" + env_name + "-seed" + str(self.args.seed),
             config=args
         )
 
