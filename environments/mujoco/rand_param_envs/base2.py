@@ -108,7 +108,7 @@ class RandomEnv(MetaEnv, MujocoEnv):
 
         # print("task in set_task", task)
         if type(task) == int:
-            print("if type(task) == int:", task)
+            # print("if type(task) == int:", task)
             task_idx = task
             task = self.set_mass_param(self.eval_task_list[task_idx])
 

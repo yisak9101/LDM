@@ -36,6 +36,7 @@ class MetaLearner:
     def __init__(self, args):
         self.args = args
         self.eval_task_num = self.args.eval_task_num
+        self.start_tsne_idx = self.args.start_tsne_idx
         utl.seed(self.args.seed, self.args.deterministic_execution)
 
         # count number of frames and number of meta-iterations
@@ -356,7 +357,7 @@ class MetaLearner:
 
         # --- visualise behaviour of policy ---
 
-        if self.iter_idx % self.args.vis_interval == 0:
+        if self.iter_idx % self.args.vis_interval == 0:  # vis_interval -> 50EP = 0.16M -> 100EP=0.32M (hopper)
             obs_rms = self.envs.venv.obs_rms if self.args.norm_obs_for_policy else None
             ret_rms = self.envs.venv.ret_rms if self.args.norm_rew_for_policy else None
 
@@ -395,11 +396,11 @@ class MetaLearner:
                 #Printing the sum of returns for 4 rollouts for each task
                 print(np.around(np.rot90(np.reshape(ret_list, (7, 7))), 2))
 
-            else: # mujoco
+            else:  # mujoco
                 ret_list = []
                 latent_samples_200step = []
                 latent_samples_400step = []
-                indices_list = [[] for _ in range(self.eval_task_num)]
+                indices_list = [[] for _ in range(self.eval_task_num - self.start_tsne_idx)]
                 i = 0
 
                 for trial_index in range(trial_num):
@@ -423,11 +424,12 @@ class MetaLearner:
                                                            task_num=task_num,
                                                            trial_num=trial_index,
                                                            )
-                        latent_samples_200step.append(latent_sample_200step.numpy(force=True))
-                        latent_samples_400step.append(latent_sample_400step.numpy(force=True))
                         ret_list_trial.append(ret/self.args.max_rollouts_per_task)
-                        indices_list[task_num].append(i)
-                        i += 1
+                        if task_num >= self.start_tsne_idx:
+                            latent_samples_200step.append(latent_sample_200step.numpy(force=True))
+                            latent_samples_400step.append(latent_sample_400step.numpy(force=True))
+                            indices_list[task_num - self.start_tsne_idx].append(i)
+                            i += 1
                     ret_list.append(ret_list_trial)
                 latent_vectors_200step = LatentVectors(np.asarray(latent_samples_200step), indices_list, self.iter_idx, EnvType.parse(self.args.env_name))
                 latent_vectors_200step.save(self.tsne_log_dir, f'{self.iter_idx}_200step')
@@ -438,35 +440,19 @@ class MetaLearner:
 
                 ret_list = np.mean(ret_list, axis=0)
 
-                if self.args.env_name == 'AntDir-v0':
-                    print("train task mean", np.mean(ret_list[:4]))
-                    print("test task mean", np.mean(ret_list[4:8]))
-                elif self.args.env_name == 'AntGoal-v0':
-                    print("train task mean", np.mean(ret_list[:4]), np.mean(ret_list[8:12]))
-                    print("test task mean", np.mean(ret_list[4:8]))
-                elif self.args.env_name == 'HalfCheetahVel-v0':
-                    print("train task mean", np.mean(ret_list[:2]))
-                    print("test task mean", np.mean(ret_list[2:7]))
 
-                # cheetah-vel-inter : [0.25, 3.25] + [0.75, 1.25, 1.75, 2.25, 2.75]
-                # ant-goal-inter : [[0.5,0.0],[0.0,0.5],[-0.5,0.0],[0.0,-0.5], [2.75,0.0],[0.0,2.75],[-2.75,0.0],[0.0,-2.75]] + [[1.75,0.0],[0.0,1.75],[-1.75,0.0],[0.0,-1.75]]  # case 4
-                # ant-dir-2 : [0 * 0.25 * np.pi,    2 * 0.25 * np.pi] + [3 * 0.25 * np.pi,    7 * 0.25 * np.pi]
-                # ant-dir-4 : [0 * 0.25 * np.pi,   2 * 0.25 * np.pi,  4 * 0.25 * np.pi,  6 * 0.25 * np.pi] + [1 * 0.25 * np.pi,   3 * 0.25 * np.pi,  5 * 0.25 * np.pi,  7 * 0.25 * np.pi]
-                # walker-mass-inter : [0.25, 3.25] + [0.75, 1.25, 1.75, 2.25, 2.75]
-                # hopper-mass-inter : [0.25, 3.25] + [0.75, 1.25, 1.75, 2.25, 2.75]
-
-                elif self.args.env_name == "walker-mass-inter-v0":
+                if self.args.env_name == "walker-mass-inter-v0":
                     train_avg_return = np.mean(ret_list[:2])
                     indistribution_avg_return = np.mean(ret_list[2:4])
-                    test_avg_return = np.mean(ret_list[4:])
+                    test_avg_return = np.mean(ret_list[4:9])  # TSNE 태스크 인덱스 반영 완료
                 elif self.args.env_name == "hopper-mass-inter-v0":
                     train_avg_return = np.mean(ret_list[:2])
                     indistribution_avg_return = np.mean(ret_list[2:4])
-                    test_avg_return = np.mean(ret_list[4:])
+                    test_avg_return = np.mean(ret_list[4:9])  # TSNE 태스크 인덱스 반영 완료
                 elif self.args.env_name == "cheetah-vel-inter-v0":
                     train_avg_return = np.mean(ret_list[:2])
                     indistribution_avg_return = np.mean(ret_list[2:4])
-                    test_avg_return = np.mean(ret_list[4:])
+                    test_avg_return = np.mean(ret_list[4:9])  # TSNE 태스크 인덱스 반영 완료
                 elif self.args.env_name == "ant-dir-2개-v0":
                     train_avg_return = np.mean(ret_list[:2])
                     indistribution_avg_return = np.mean(ret_list[2:3])
@@ -474,11 +460,11 @@ class MetaLearner:
                 elif self.args.env_name == "ant-dir-4개-v0":
                     train_avg_return = np.mean(ret_list[:4])
                     indistribution_avg_return = np.mean(ret_list[4:8])
-                    test_avg_return = np.mean(ret_list[8:])
+                    test_avg_return = np.mean(ret_list[8:12])  # TSNE 태스크 인덱스 반영 완료
                 elif self.args.env_name == "ant-goal-inter-v0":
                     train_avg_return = np.mean(ret_list[:8])
                     indistribution_avg_return = np.mean(ret_list[8:16])
-                    test_avg_return = np.mean(ret_list[16:])
+                    test_avg_return = np.mean(ret_list[16:20])  # TSNE 태스크 인덱스 반영 완료
                 elif self.args.env_name == "cheetah-mass-inter-v0":
                     train_avg_return = np.mean(ret_list[:2])
                     indistribution_avg_return = np.mean(ret_list[2:4])

@@ -26,7 +26,9 @@ def get_args(rest_args):
     parser.add_argument('--norm_rew_for_policy', type=boolean_argument, default=True,
                         help='normalise env rewards (for policy)')
     parser.add_argument('--normalise_actions', type=boolean_argument, default=False, help='output normalised actions')
-    parser.add_argument('--eval_task_num', type=int, default=35, help='how many environments to evaluate on')
+    parser.add_argument('--eval_task_num', type=int, default=44, help='how many environments to evaluate on')
+    parser.add_argument('--start_tsne_idx', type=int, default=9, help='')
+
 
     # --- POLICY ---
 
@@ -146,7 +148,7 @@ def get_args(rest_args):
                         help='save interval, one save per n updates (default: 100)')
     parser.add_argument('--eval_interval', type=int, default=1000,
                         help='eval interval, one eval per n updates (default: None)')
-    parser.add_argument('--vis_interval', type=int, default=50,
+    parser.add_argument('--vis_interval', type=int, default=100,
                         help='visualisation interval, one eval per n updates (default: None)')
     parser.add_argument('--agent_log_dir', default='/tmp/gym/', help='directory to save agent logs (default: /tmp/gym)')
     parser.add_argument('--results_log_dir', default=None, help='directory to save agent logs (default: ./data)')

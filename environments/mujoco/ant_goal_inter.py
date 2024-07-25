@@ -12,8 +12,18 @@ class AntGoalInterEnv(AntEnv):
         self._max_episode_steps = max_episode_steps
         self.task_dim = 4
 
+        ##
+        eval_for_train_task_list = [[0.5, 0], [0, 0.5], [-0.5, 0], [0, -0.5], [2.75, 0], [0, 2.75], [-2.75, 0], [0, -2.75]]  # [:8]
+        eval_for_indis_task_list = [[0.5, 0], [0, 0.5], [-0.5, 0], [0, -0.5], [2.75, 0], [0, 2.75], [-2.75, 0], [0, -2.75]]  # [8:16]
+        eval_for_test_task_list = [[1.75, 0], [0, 1.75], [-1.75, 0], [0, -1.75]]  # [16:20]
+
         train_tsne_tasks_list, test_tsne_tasks_list = self.sample_tsne_tasks()
-        self.eval_task_list = train_tsne_tasks_list + test_tsne_tasks_list  # 32개, 16개 = 48개
+
+        # 총
+        self.eval_task_list = eval_for_train_task_list + \
+                              eval_for_indis_task_list + \
+                              eval_for_test_task_list + \
+                              train_tsne_tasks_list + test_tsne_tasks_list  #
 
         super(AntGoalInterEnv, self).__init__()
 

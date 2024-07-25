@@ -19,9 +19,24 @@ class HopperMassInterEnv(RandomEnv, utils.EzPickle):
         # self.task_dim = 4
         # self._elapsed_steps = -1  # the thing below takes one step
 
+        # """self.eval_task_list = [0.25, 3.25] + [0.25, 3.25] + [0.75, 1.25, 1.75, 2.25, 2.75]"""이거일때 아래처럼 성능 뽑음.
+        # elif self.args.env_name == "hopper-mass-inter-v0":
+        #     train_avg_return = np.mean(ret_list[:2])
+        #     indistribution_avg_return = np.mean(ret_list[2:4])
+        #     test_avg_return = np.mean(ret_list[4:])
+
+        eval_for_train_task_list = [0.25, 3.25]  # [:2]
+        eval_for_indis_task_list = [0.25, 3.25]  # [2:4]
+        eval_for_test_task_list  = [0.75, 1.25, 1.75, 2.25, 2.75]  # [4:9]
+
         train_tsne_tasks = [0.1, 0.2, 0.3, 0.4, 0.5] + [3.0, 3.1, 3.2, 3.3, 3.4, 3.5]  # 11개
         test_tsne_tasks = [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9]  # 24개
-        self.eval_task_list = train_tsne_tasks + test_tsne_tasks  # 35개
+
+        # 총 44개
+        self.eval_task_list = eval_for_train_task_list + \
+                              eval_for_indis_task_list + \
+                              eval_for_test_task_list + \
+                              train_tsne_tasks + test_tsne_tasks  #
 
     def _step(self, a):
         posbefore = self.model.data.qpos[0, 0]
