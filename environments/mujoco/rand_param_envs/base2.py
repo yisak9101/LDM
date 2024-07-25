@@ -70,7 +70,7 @@ class RandomEnv(MetaEnv, MujocoEnv):
     def __init__(self, log_scale_limit, file_name, *args, rand_params=RAND_PARAMS, **kwargs):
         self.log_scale_limit = log_scale_limit
         self.rand_params = rand_params
-        print("file_name in base2.py", file_name)
+        # print("file_name in base2.py", file_name)
 
         MujocoEnv.__init__(self, file_name, 4)
         assert set(rand_params) <= set(self.RAND_PARAMS_EXTENDED), \

@@ -40,6 +40,14 @@ walker_mass_inter = EnvWrapper(
     [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8,
      2.9]
 )
+hopper_mass_inter = EnvWrapper(
+    "hopper-mass-inter",
+    [*range(0, 11)],
+    [*range(11, 35)],
+    [0.1, 0.2, 0.3, 0.4, 0.5, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5],
+    [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8,
+     2.9]
+)
 ant_goal_inter = EnvWrapper(
     "ant-goal-inter",
     [*range(0, 32)],
@@ -53,6 +61,7 @@ class EnvType(Enum):
     CHEETAH_VEL_INTER = cheetah_vel_inter
     ANT_DIR_4 = ant_dir_4
     WALKER_MASS_INTER = walker_mass_inter
+    HOPPER_MASS_INTER = hopper_mass_inter
     ANT_GOAL_INTER = ant_goal_inter
 
     @staticmethod
@@ -63,6 +72,8 @@ class EnvType(Enum):
             return EnvType.ANT_DIR_4
         elif "walker-mass-inter" in text:
             return EnvType.WALKER_MASS_INTER
+        elif "hopper-mass-inter" in text:
+            return EnvType.HOPPER_MASS_INTER
         elif "ant-goal-inter" in text:
             return EnvType.ANT_GOAL_INTER
 
